@@ -1,16 +1,19 @@
 {
     "manifest_version": 3,
-    "name": "Custom New Tab",
+    "name": "Custom NewTab Override",
     "version": "1.0",
-    "description": "Thay thế trang New Tab bằng HTML tùy chỉnh.",
+    "description": "Override the new tab page with your custom HTML design",
+    "permissions": ["storage", "tabs"],
     "chrome_url_overrides": {
         "newtab": "newtab.html"
     },
     "action": {
         "default_popup": "popup.html",
-        "default_icon": "icon.png"
+        "default_title": "Custom NewTab Override"
     },
     "icons": {
-        "128": "icon.png"
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
     }
 }
