@@ -335,6 +335,81 @@ function renderHistoryAccordion(groupedHistory) {
     }
 }
 
+// Custom select dropdown functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedOption = document.getElementById('selectedSearchEngine');
+    const optionsContainer = document.getElementById('searchEngineOptions');
+    const options = document.querySelectorAll('.option');
+    let currentSearchEngine = 'google'; // Default search engine
+    
+    // Toggle dropdown
+    selectedOption.addEventListener('click', function() {
+        optionsContainer.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function(e) {
+        if (!selectedOption.contains(e.target) && !optionsContainer.contains(e.target)) {
+            optionsContainer.classList.remove('show');
+        }
+    });
+    
+    // Handle option selection
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            const imgSrc = this.querySelector('img').src;
+            const text = this.querySelector('span').textContent;
+            
+            // Update selected option display
+            selectedOption.querySelector('img').src = imgSrc;
+            selectedOption.querySelector('span').textContent = text;
+            
+            // Update current search engine
+            currentSearchEngine = value;
+            
+            // Close dropdown
+            optionsContainer.classList.remove('show');
+        });
+    });
+    
+    // Modify your existing search function to use the currentSearchEngine variable
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    function performSearch() {
+        const query = searchInput.value.trim();
+        if (query) {
+            let searchUrl;
+            switch (currentSearchEngine) {
+                case 'google':
+                    searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                    break;
+                case 'bing':
+                    searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+                    break;
+                case 'duckduckgo':
+                    searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+                    break;
+                case 'yahoo':
+                    searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`;
+                    break;
+                default:
+                    searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            }
+            window.location.href = searchUrl;
+        }
+    }
+    
+    // Add event listeners for search
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+});
+
 // Update search engine icon when selection changes
 document.addEventListener('DOMContentLoaded', function() {
     const searchEngineSelector = document.getElementById('searchEngine');
