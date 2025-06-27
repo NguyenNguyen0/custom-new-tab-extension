@@ -7,15 +7,15 @@
 body {
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
     min-height: 100vh;
     overflow-x: hidden;
 }
 
-/* .toggle-hide-decorative-circle,
+.toggle-hide-decorative-circle,
 .toggle-hide-decorative-circle:checked~.decorative-circle {
     display: none;
-} */
+}
 
 .decorative-circle {
     --circle-size: 250px;
@@ -106,9 +106,10 @@ body {
 
 /* Bookmarks Bar */
 .bookmarks-bar {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     border-radius: 15px;
+    border: 1px solid #f5f5f5;
     padding: 15px;
     margin-bottom: 20px;
     display: flex;
@@ -118,10 +119,11 @@ body {
 }
 
 .bookmark-item {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.4);
     color: white;
     padding: 8px 16px;
     border-radius: 25px;
+    border: 1px solid #f5f5f5;
     text-decoration: none;
     font-size: 14px;
     transition: all 0.3s ease;
@@ -170,7 +172,7 @@ body {
     flex: 1;
     border: none;
     outline: none;
-    padding: 15px;
+    padding: 10px;
     font-size: 16px;
     background: transparent;
 }
@@ -179,7 +181,7 @@ body {
     background: #667eea;
     color: white;
     border: none;
-    padding: 15px 25px;
+    padding: 10px 25px;
     border-radius: 50px;
     cursor: pointer;
     font-weight: 900;
@@ -419,7 +421,7 @@ body {
     top: 100%;
     left: 0;
     width: 100%;
-    background-color: #f8f7fc;
+    background-color: rgba(255, 255, 255, 0.95);
     border: 1px solid #c9c8c8;
     border-top: none;
     border-radius: 0 0 4px 4px;
@@ -448,6 +450,169 @@ body {
     width: 24px;
     height: 24px;
     margin-right: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #646464;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 80%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.close-modal {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #777;
+}
+
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.input-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.input-group input[type="file"] {
+    display: block;
+    margin: 8px 0;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.primary-button, .secondary-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.primary-button {
+    background-color: #4285f4;
+    color: white;
+}
+
+.secondary-button {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.primary-button:hover {
+    background-color: #3367d6;
+}
+
+.secondary-button:hover {
+    background-color: #e4e4e4;
+}
+
+.background-preview {
+    width: 100%;
+    height: 150px;
+    border: 1px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    overflow: hidden;
+}
+
+.background-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+#backgroundFileInput {
+    border: 1px dashed #ccc;
+    padding: 6px;
+}
+
+#backgroundFileInput::file-selector-button {
+    padding: 8px 12px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#noBackgroundMessage {
+    color: #999;
+}
+
+#applyUrlBackground {
+    /* margin-left: 8px; */
+    padding: 8px 12px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#applyUrlBackground:hover {
+    background-color: #3367d6;
 }
 
 @media (max-width: 768px) {

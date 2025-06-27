@@ -428,6 +428,168 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Settings Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM elements
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModal = document.getElementById('closeSettingsModal');
+    const backgroundUrlInput = document.getElementById('backgroundUrlInput');
+    const backgroundFileInput = document.getElementById('backgroundFileInput');
+    const applyUrlBackground = document.getElementById('applyUrlBackground');
+    const saveBackground = document.getElementById('saveBackground');
+    const resetBackground = document.getElementById('resetBackground');
+    const backgroundPreview = document.getElementById('backgroundPreview');
+    const noBackgroundMessage = document.getElementById('noBackgroundMessage');
+    const toggleHideDecorativeCircle = document.querySelector('.toggle-hide-decorative-circle');
+
+    let currentBackgroundData = null;
+
+    // Open settings modal
+    settingsBtn.addEventListener('click', function() {
+        settingsModal.style.display = 'block';
+        loadSavedBackground();
+    });
+
+    // Close settings modal
+    closeSettingsModal.addEventListener('click', function() {
+        settingsModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+
+    // Apply background from URL
+    applyUrlBackground.addEventListener('click', function() {
+        const url = backgroundUrlInput.value.trim();
+        if (url) {
+            // Check if URL is valid before setting
+            const img = new Image();
+            img.onload = function() {
+                updateBackgroundPreview(url);
+                currentBackgroundData = {
+                    type: 'url',
+                    value: url
+                };
+            };
+            img.onerror = function() {
+                alert('Invalid image URL. Please check the link and try again.');
+            };
+            img.src = url;
+        } else {
+            alert('Please enter an image URL');
+        }
+    });
+
+    // Handle file upload
+    backgroundFileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                updateBackgroundPreview(imageData);
+                currentBackgroundData = {
+                    type: 'data',
+                    value: imageData
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Save background to localStorage
+    saveBackground.addEventListener('click', function() {
+        if (currentBackgroundData) {
+            localStorage.setItem('customBackground', JSON.stringify(currentBackgroundData));
+            applyBackgroundToPage(currentBackgroundData);
+            alert('Background saved!');
+        } else {
+            alert('Please select or enter a background image first');
+        }
+    });
+
+    // Reset to default background
+    resetBackground.addEventListener('click', function() {
+        localStorage.removeItem('customBackground');
+        document.body.style.backgroundImage = '';
+        document.body.style.backgroundColor = '';
+        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        backgroundPreview.style.display = 'none';
+        backgroundPreview.src = '';
+        noBackgroundMessage.style.display = 'block';
+        backgroundUrlInput.value = '';
+        backgroundFileInput.value = '';
+        currentBackgroundData = null;
+        toggleHideDecorativeCircle.checked = false;
+        alert('Background reset to default');
+    });
+
+    // Update the background preview
+    function updateBackgroundPreview(src) {
+        backgroundPreview.src = src;
+        backgroundPreview.style.display = 'block';
+        noBackgroundMessage.style.display = 'none';
+    }
+
+    // Load saved background from localStorage
+    function loadSavedBackground() {
+        const savedBackground = localStorage.getItem('customBackground');
+        if (savedBackground) {
+            try {
+                currentBackgroundData = JSON.parse(savedBackground);
+                updateBackgroundPreview(currentBackgroundData.value);
+                if (currentBackgroundData.type === 'url') {
+                    backgroundUrlInput.value = currentBackgroundData.value;
+                }
+            } catch (e) {
+                console.error('Error loading saved background:', e);
+            }
+            toggleHideDecorativeCircle.checked = true;
+        } else {
+            backgroundPreview.style.display = 'none';
+            noBackgroundMessage.style.display = 'block';
+            toggleHideDecorativeCircle.checked = false;
+        }
+    }
+
+    // Apply background to the page
+    function applyBackgroundToPage(backgroundData) {
+        if (backgroundData && backgroundData.value) {
+            document.body.style.backgroundImage = `url(${backgroundData.value})`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundRepeat = 'no-repeat';
+            document.body.style.backgroundAttachment = 'fixed';
+            toggleHideDecorativeCircle.checked = true;
+        }
+    }
+
+    // Initial load of saved background
+    function initializeBackground() {
+        const savedBackground = localStorage.getItem('customBackground');
+        if (savedBackground) {
+            try {
+                const backgroundData = JSON.parse(savedBackground);
+                applyBackgroundToPage(backgroundData);
+                toggleHideDecorativeCircle.checked = true;
+                return;
+            } catch (e) {
+                console.error('Error applying saved background:', e);
+            }
+        }
+        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        toggleHideDecorativeCircle.checked = false;
+    }
+
+    // Initialize background when page loads
+    initializeBackground();
+});
+
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
     // Update clock immediately and every minute
