@@ -9,6 +9,9 @@
         "history",
         "tabs"
     ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "chrome_url_overrides": {
         "newtab": "newtab.html"
     },

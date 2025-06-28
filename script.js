@@ -1,3 +1,44 @@
+// Initialize all the custom new tab features
+function initializeNewTab() {
+    // Clock initialization
+    updateClock();
+    setInterval(updateClock, 60000);
+    
+    // Event listeners for search
+    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+    
+    document.getElementById('searchButton')?.addEventListener('click', performSearch);
+    
+    // Initialize other components
+    initializeSettings();
+    
+    // Additional initializations for existing functionality
+    const calendar = new Calendar();
+    calendar.render();
+    
+    // Listen for storage changes to apply settings without reload
+    chrome.storage.onChanged.addListener(function(changes, namespace) {
+        if (namespace === 'sync') {
+            // Handle custom background changes
+            if (changes.customBackground) {
+                const newBackground = changes.customBackground.newValue;
+                if (newBackground) {
+                    document.body.style.backgroundImage = `url(${newBackground})`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                } else {
+                    // Reset to default if background is removed
+                    document.body.style.backgroundImage = '';
+                }
+            }
+        }
+    });
+}
+
 // Clock functionality
 function updateClock() {
     const now = new Date();
@@ -119,6 +160,50 @@ class Calendar {
     }
 }
 
+// Helper function to get favicon URL with improved fallback handling
+function getFaviconUrl(url) {
+    try {
+        const domain = new URL(url).hostname;
+        // Return a function that provides multiple fallback options
+        return {
+            primary: `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+            fallback1: `https://icon.horse/icon/${domain}`,
+            fallback2: `https://www.google.com/s2/favicons?domain=${domain}`, // Try without size
+            default: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgZmlsbD0iIzk5OTk5OSIvPgo8cGF0aCBkPSJNNSA2SDE0TTUgMTBIMTEiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+',
+        };
+    } catch (e) {
+        // Default favicon for invalid URLs
+        return {
+            primary: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgZmlsbD0iIzk5OTk5OSIvPgo8cGF0aCBkPSJNNSA2SDE0TTUgMTBIMTEiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+',
+        };
+    }
+}
+
+// Helper function to apply favicon with fallbacks
+function applyFaviconWithFallbacks(imgElement, url) {
+    const faviconUrls = getFaviconUrl(url);
+    
+    imgElement.onerror = function() {
+        // Try first fallback
+        if (this.src === faviconUrls.primary) {
+            this.src = faviconUrls.fallback1;
+        } 
+        // Try second fallback
+        else if (this.src === faviconUrls.fallback1) {
+            this.src = faviconUrls.fallback2;
+        } 
+        // Use default
+        else {
+            this.src = faviconUrls.default;
+            // Remove onerror to prevent infinite loop
+            this.onerror = null;
+        }
+    };
+    
+    // Start with primary URL
+    imgElement.src = faviconUrls.primary;
+}
+
 // Load bookmarks
 function loadBookmarks() {
     if (typeof chrome !== 'undefined' && chrome.bookmarks) {
@@ -136,17 +221,17 @@ function loadBookmarks() {
                         bookmarkElement.className = 'bookmark-item';
                         bookmarkElement.href = bookmark.url;
 
-                        // Create favicon with fallback
+                        // Create favicon with improved fallback
                         const favicon = document.createElement('img');
                         favicon.className = 'bookmark-icon';
-                        favicon.src = `chrome://favicon/${bookmark.url}`;
-                        favicon.onerror = function () {
-                            this.src = `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}&sz=32`;
-                        };
+                        applyFaviconWithFallbacks(favicon, bookmark.url);
 
                         bookmarkElement.appendChild(favicon);
-                        bookmarkElement.appendChild(document.createTextNode(bookmark.title || 'Untitled'));
 
+                        const bookmarkTitle = document.createElement('span');
+                        bookmarkTitle.innerText = bookmark.title || 'Untitled';
+                        
+                        bookmarkElement.appendChild(bookmarkTitle);
                         bookmarksBar.appendChild(bookmarkElement);
                     }
                 });
@@ -179,10 +264,7 @@ function loadBookmarks() {
 
             const favicon = document.createElement('img');
             favicon.className = 'bookmark-icon';
-            favicon.src = `https://www.google.com/s2/favicons?domain=${bookmark.domain}&sz=32`;
-            favicon.onerror = function () {
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgZmlsbD0iIzMzNzNkYyIvPgo8cGF0aCBkPSJNOCA0VjEyTTQgOEgxMiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+';
-            };
+            applyFaviconWithFallbacks(favicon, bookmark.url);
 
             bookmarkElement.appendChild(favicon);
             bookmarkElement.appendChild(document.createTextNode(bookmark.title));
@@ -272,13 +354,10 @@ function renderHistoryAccordion(groupedHistory) {
             const historyItem = document.createElement('div');
             historyItem.className = 'history-item';
 
-            // Create favicon with fallback
+            // Create favicon with improved fallback
             const favicon = document.createElement('img');
             favicon.className = 'history-favicon';
-            favicon.src = `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=32`;
-            favicon.onerror = function () {
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgZmlsbD0iIzk5OTk5OSIvPgo8cGF0aCBkPSJNNSA2SDE0TTUgMTBIMTEiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+';
-            };
+            applyFaviconWithFallbacks(favicon, item.url);
 
             const infoDiv = document.createElement('div');
             infoDiv.className = 'history-info';
@@ -410,24 +489,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Update search engine icon when selection changes
-document.addEventListener('DOMContentLoaded', function() {
-    const searchEngineSelector = document.getElementById('searchEngine');
-    
-    // Set initial icon class
-    updateSearchEngineIcon();
-    
-    // Update when selection changes
-    searchEngineSelector.addEventListener('change', updateSearchEngineIcon);
-    
-    function updateSearchEngineIcon() {
-        // Remove all engine classes
-        searchEngineSelector.classList.remove('google', 'bing', 'duckduckgo', 'yahoo');
-        // Add the selected engine class
-        searchEngineSelector.classList.add(searchEngineSelector.value);
-    }
-});
-
 // Settings Modal functionality
 document.addEventListener('DOMContentLoaded', function() {
     // DOM elements
@@ -507,7 +568,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentBackgroundData) {
             localStorage.setItem('customBackground', JSON.stringify(currentBackgroundData));
             applyBackgroundToPage(currentBackgroundData);
-            alert('Background saved!');
         } else {
             alert('Please select or enter a background image first');
         }
@@ -515,18 +575,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Reset to default background
     resetBackground.addEventListener('click', function() {
+        // Remove from localStorage
         localStorage.removeItem('customBackground');
-        document.body.style.backgroundImage = '';
-        document.body.style.backgroundColor = '';
-        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        backgroundPreview.style.display = 'none';
-        backgroundPreview.src = '';
-        noBackgroundMessage.style.display = 'block';
-        backgroundUrlInput.value = '';
-        backgroundFileInput.value = '';
-        currentBackgroundData = null;
-        toggleHideDecorativeCircle.checked = false;
-        alert('Background reset to default');
+        
+        // Also remove from chrome.storage
+        chrome.storage.sync.remove(['customBackground'], function() {
+            console.log('Custom background removed from storage');
+            
+            // Update UI
+            document.body.style.backgroundImage = '';
+            document.body.style.backgroundColor = '';
+            backgroundPreview.style.display = 'none';
+            backgroundPreview.src = '';
+            noBackgroundMessage.style.display = 'block';
+            backgroundUrlInput.value = '';
+            backgroundFileInput.value = '';
+            currentBackgroundData = null;
+            toggleHideDecorativeCircle.checked = false;
+            
+            // Notify other tabs
+            chrome.runtime.sendMessage({
+                action: "settingsUpdated",
+                setting: "background"
+            });
+        });
     });
 
     // Update the background preview
@@ -582,13 +654,124 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error applying saved background:', e);
             }
         }
-        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         toggleHideDecorativeCircle.checked = false;
     }
 
     // Initialize background when page loads
     initializeBackground();
 });
+
+// Settings functionality
+function initializeSettings() {
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModal = document.getElementById('closeSettingsModal');
+    
+    if (!settingsBtn || !settingsModal || !closeSettingsModal) {
+        console.warn('Some settings elements are missing');
+        return;
+    }
+    
+    // Open settings modal
+    settingsBtn.addEventListener('click', function() {
+        settingsModal.style.display = 'block';
+        loadSettings();
+    });
+    
+    // Close settings modal
+    closeSettingsModal.addEventListener('click', function() {
+        settingsModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+    
+    // Initialize background settings
+    initializeBackgroundSettings();
+}
+
+function loadSettings() {
+    // Load any saved settings from chrome.storage.sync
+    chrome.storage.sync.get(['customBackground'], function(result) {
+        // Handle background settings
+        if (result.customBackground) {
+            const backgroundPreview = document.getElementById('backgroundPreview');
+            const noBackgroundMessage = document.getElementById('noBackgroundMessage');
+            
+            if (backgroundPreview && noBackgroundMessage) {
+                backgroundPreview.src = result.customBackground;
+                backgroundPreview.style.display = 'block';
+                noBackgroundMessage.style.display = 'none';
+                
+                // Also apply to body
+                document.body.style.backgroundImage = `url(${result.customBackground})`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+            }
+        }
+    });
+}
+
+function initializeBackgroundSettings() {
+    const applyUrlButton = document.getElementById('applyUrlBackground');
+    const backgroundUrlInput = document.getElementById('backgroundUrlInput');
+    const backgroundFileInput = document.getElementById('backgroundFileInput');
+    
+    if (applyUrlButton && backgroundUrlInput) {
+        applyUrlButton.addEventListener('click', function() {
+            const url = backgroundUrlInput.value.trim();
+            if (url) {
+                saveBackgroundSettings(url);
+            }
+        });
+    }
+    
+    if (backgroundFileInput) {
+        backgroundFileInput.addEventListener('change', function() {
+            if (backgroundFileInput.files.length > 0) {
+                const file = backgroundFileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    saveBackgroundSettings(dataUrl);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+}
+
+function saveBackgroundSettings(backgroundUrl) {
+    // Save to chrome.storage
+    chrome.storage.sync.set({ customBackground: backgroundUrl }, function() {
+        // Update preview
+        const backgroundPreview = document.getElementById('backgroundPreview');
+        const noBackgroundMessage = document.getElementById('noBackgroundMessage');
+        
+        if (backgroundPreview && noBackgroundMessage) {
+            backgroundPreview.src = backgroundUrl;
+            backgroundPreview.style.display = 'block';
+            noBackgroundMessage.style.display = 'none';
+        }
+        
+        // Apply to body
+        document.body.style.backgroundImage = `url(${backgroundUrl})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        
+        // Notify any open tabs about the update
+        chrome.runtime.sendMessage({
+            action: "settingsUpdated",
+            setting: "background"
+        });
+    });
+}
 
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
