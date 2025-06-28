@@ -9,9 +9,6 @@
         "history",
         "tabs"
     ],
-    "background": {
-        "service_worker": "background.js"
-    },
     "chrome_url_overrides": {
         "newtab": "newtab.html"
     },
@@ -20,6 +17,6 @@
         "default_title": "Custom New Tab"
     },
     "icons": {
-        "128": "icon.png"
+        "128": "./static/icon.png"
     }
 }
