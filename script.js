@@ -3,25 +3,25 @@ function initializeNewTab() {
     // Clock initialization
     updateClock();
     setInterval(updateClock, 60000);
-    
+
     // Event listeners for search
-    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+    document.getElementById('searchInput')?.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             performSearch();
         }
     });
-    
+
     document.getElementById('searchButton')?.addEventListener('click', performSearch);
-    
+
     // Initialize other components
     initializeSettings();
-    
+
     // Additional initializations for existing functionality
     const calendar = new Calendar();
     calendar.render();
-    
+
     // Listen for storage changes to apply settings without reload
-    chrome.storage.onChanged.addListener(function(changes, namespace) {
+    chrome.storage.onChanged.addListener(function (changes, namespace) {
         if (namespace === 'sync') {
             // Handle custom background changes
             if (changes.customBackground) {
@@ -182,16 +182,16 @@ function getFaviconUrl(url) {
 // Helper function to apply favicon with fallbacks
 function applyFaviconWithFallbacks(imgElement, url) {
     const faviconUrls = getFaviconUrl(url);
-    
-    imgElement.onerror = function() {
+
+    imgElement.onerror = function () {
         // Try first fallback
         if (this.src === faviconUrls.primary) {
             this.src = faviconUrls.fallback1;
-        } 
+        }
         // Try second fallback
         else if (this.src === faviconUrls.fallback1) {
             this.src = faviconUrls.fallback2;
-        } 
+        }
         // Use default
         else {
             this.src = faviconUrls.default;
@@ -199,7 +199,7 @@ function applyFaviconWithFallbacks(imgElement, url) {
             this.onerror = null;
         }
     };
-    
+
     // Start with primary URL
     imgElement.src = faviconUrls.primary;
 }
@@ -230,7 +230,7 @@ function loadBookmarks() {
 
                         const bookmarkTitle = document.createElement('span');
                         bookmarkTitle.innerText = bookmark.title || 'Untitled';
-                        
+
                         bookmarkElement.appendChild(bookmarkTitle);
                         bookmarksBar.appendChild(bookmarkElement);
                     }
@@ -415,47 +415,47 @@ function renderHistoryAccordion(groupedHistory) {
 }
 
 // Custom select dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const selectedOption = document.getElementById('selectedSearchEngine');
     const optionsContainer = document.getElementById('searchEngineOptions');
     const options = document.querySelectorAll('.option');
     let currentSearchEngine = 'google'; // Default search engine
-    
+
     // Toggle dropdown
-    selectedOption.addEventListener('click', function() {
+    selectedOption.addEventListener('click', function () {
         optionsContainer.classList.toggle('show');
     });
-    
+
     // Close dropdown when clicking elsewhere
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!selectedOption.contains(e.target) && !optionsContainer.contains(e.target)) {
             optionsContainer.classList.remove('show');
         }
     });
-    
+
     // Handle option selection
     options.forEach(option => {
-        option.addEventListener('click', function() {
+        option.addEventListener('click', function () {
             const value = this.getAttribute('data-value');
             const imgSrc = this.querySelector('img').src;
             const text = this.querySelector('span').textContent;
-            
+
             // Update selected option display
             selectedOption.querySelector('img').src = imgSrc;
             selectedOption.querySelector('span').textContent = text;
-            
+
             // Update current search engine
             currentSearchEngine = value;
-            
+
             // Close dropdown
             optionsContainer.classList.remove('show');
         });
     });
-    
+
     // Modify your existing search function to use the currentSearchEngine variable
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
-    
+
     function performSearch() {
         const query = searchInput.value.trim();
         if (query) {
@@ -479,10 +479,10 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = searchUrl;
         }
     }
-    
+
     // Add event listeners for search
     searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             performSearch();
         }
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Settings Modal functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // DOM elements
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -507,37 +507,37 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentBackgroundData = null;
 
     // Open settings modal
-    settingsBtn.addEventListener('click', function() {
+    settingsBtn.addEventListener('click', function () {
         settingsModal.style.display = 'block';
         loadSavedBackground();
     });
 
     // Close settings modal
-    closeSettingsModal.addEventListener('click', function() {
+    closeSettingsModal.addEventListener('click', function () {
         settingsModal.style.display = 'none';
     });
 
     // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', function (event) {
         if (event.target === settingsModal) {
             settingsModal.style.display = 'none';
         }
     });
 
     // Apply background from URL
-    applyUrlBackground.addEventListener('click', function() {
+    applyUrlBackground.addEventListener('click', function () {
         const url = backgroundUrlInput.value.trim();
         if (url) {
             // Check if URL is valid before setting
             const img = new Image();
-            img.onload = function() {
+            img.onload = function () {
                 updateBackgroundPreview(url);
                 currentBackgroundData = {
                     type: 'url',
                     value: url
                 };
             };
-            img.onerror = function() {
+            img.onerror = function () {
                 alert('Invalid image URL. Please check the link and try again.');
             };
             img.src = url;
@@ -547,11 +547,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle file upload
-    backgroundFileInput.addEventListener('change', function(event) {
+    backgroundFileInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const imageData = e.target.result;
                 updateBackgroundPreview(imageData);
                 currentBackgroundData = {
@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Save background to localStorage
-    saveBackground.addEventListener('click', function() {
+    saveBackground.addEventListener('click', function () {
         if (currentBackgroundData) {
             localStorage.setItem('customBackground', JSON.stringify(currentBackgroundData));
             applyBackgroundToPage(currentBackgroundData);
@@ -574,14 +574,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Reset to default background
-    resetBackground.addEventListener('click', function() {
+    resetBackground.addEventListener('click', function () {
         // Remove from localStorage
         localStorage.removeItem('customBackground');
-        
+
         // Also remove from chrome.storage
-        chrome.storage.sync.remove(['customBackground'], function() {
+        chrome.storage.sync.remove(['customBackground'], function () {
             console.log('Custom background removed from storage');
-            
+
             // Update UI
             document.body.style.backgroundImage = '';
             document.body.style.backgroundColor = '';
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
             backgroundFileInput.value = '';
             currentBackgroundData = null;
             toggleHideDecorativeCircle.checked = false;
-            
+
             // Notify other tabs
             chrome.runtime.sendMessage({
                 action: "settingsUpdated",
@@ -666,47 +666,47 @@ function initializeSettings() {
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsModal = document.getElementById('closeSettingsModal');
-    
+
     if (!settingsBtn || !settingsModal || !closeSettingsModal) {
         console.warn('Some settings elements are missing');
         return;
     }
-    
+
     // Open settings modal
-    settingsBtn.addEventListener('click', function() {
+    settingsBtn.addEventListener('click', function () {
         settingsModal.style.display = 'block';
         loadSettings();
     });
-    
+
     // Close settings modal
-    closeSettingsModal.addEventListener('click', function() {
+    closeSettingsModal.addEventListener('click', function () {
         settingsModal.style.display = 'none';
     });
-    
+
     // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', function (event) {
         if (event.target === settingsModal) {
             settingsModal.style.display = 'none';
         }
     });
-    
+
     // Initialize background settings
     initializeBackgroundSettings();
 }
 
 function loadSettings() {
     // Load any saved settings from chrome.storage.sync
-    chrome.storage.sync.get(['customBackground'], function(result) {
+    chrome.storage.sync.get(['customBackground'], function (result) {
         // Handle background settings
         if (result.customBackground) {
             const backgroundPreview = document.getElementById('backgroundPreview');
             const noBackgroundMessage = document.getElementById('noBackgroundMessage');
-            
+
             if (backgroundPreview && noBackgroundMessage) {
                 backgroundPreview.src = result.customBackground;
                 backgroundPreview.style.display = 'block';
                 noBackgroundMessage.style.display = 'none';
-                
+
                 // Also apply to body
                 document.body.style.backgroundImage = `url(${result.customBackground})`;
                 document.body.style.backgroundSize = 'cover';
@@ -720,27 +720,27 @@ function initializeBackgroundSettings() {
     const applyUrlButton = document.getElementById('applyUrlBackground');
     const backgroundUrlInput = document.getElementById('backgroundUrlInput');
     const backgroundFileInput = document.getElementById('backgroundFileInput');
-    
+
     if (applyUrlButton && backgroundUrlInput) {
-        applyUrlButton.addEventListener('click', function() {
+        applyUrlButton.addEventListener('click', function () {
             const url = backgroundUrlInput.value.trim();
             if (url) {
                 saveBackgroundSettings(url);
             }
         });
     }
-    
+
     if (backgroundFileInput) {
-        backgroundFileInput.addEventListener('change', function() {
+        backgroundFileInput.addEventListener('change', function () {
             if (backgroundFileInput.files.length > 0) {
                 const file = backgroundFileInput.files[0];
                 const reader = new FileReader();
-                
-                reader.onload = function(e) {
+
+                reader.onload = function (e) {
                     const dataUrl = e.target.result;
                     saveBackgroundSettings(dataUrl);
                 };
-                
+
                 reader.readAsDataURL(file);
             }
         });
@@ -749,22 +749,22 @@ function initializeBackgroundSettings() {
 
 function saveBackgroundSettings(backgroundUrl) {
     // Save to chrome.storage
-    chrome.storage.sync.set({ customBackground: backgroundUrl }, function() {
+    chrome.storage.sync.set({ customBackground: backgroundUrl }, function () {
         // Update preview
         const backgroundPreview = document.getElementById('backgroundPreview');
         const noBackgroundMessage = document.getElementById('noBackgroundMessage');
-        
+
         if (backgroundPreview && noBackgroundMessage) {
             backgroundPreview.src = backgroundUrl;
             backgroundPreview.style.display = 'block';
             noBackgroundMessage.style.display = 'none';
         }
-        
+
         // Apply to body
         document.body.style.backgroundImage = `url(${backgroundUrl})`;
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
-        
+
         // Notify any open tabs about the update
         chrome.runtime.sendMessage({
             action: "settingsUpdated",
