@@ -215,23 +215,10 @@ function loadBookmarks() {
             const bookmarksBarFolder = bookmarkTree[0].children.find(folder => folder.id === '1');
 
             if (bookmarksBarFolder && bookmarksBarFolder.children) {
-                bookmarksBarFolder.children.forEach(bookmark => {
-                    if (bookmark.url) {
-                        const bookmarkElement = document.createElement('a');
-                        bookmarkElement.className = 'bookmark-item';
-                        bookmarkElement.href = bookmark.url;
-
-                        // Create favicon with improved fallback
-                        const favicon = document.createElement('img');
-                        favicon.className = 'bookmark-icon';
-                        applyFaviconWithFallbacks(favicon, bookmark.url);
-
-                        bookmarkElement.appendChild(favicon);
-
-                        const bookmarkTitle = document.createElement('span');
-                        bookmarkTitle.innerText = bookmark.title || 'Untitled';
-
-                        bookmarkElement.appendChild(bookmarkTitle);
+                // Process all bookmarks and folders
+                bookmarksBarFolder.children.forEach(node => {
+                    const bookmarkElement = createBookmarkElement(node);
+                    if (bookmarkElement) {
                         bookmarksBar.appendChild(bookmarkElement);
                     }
                 });
@@ -240,37 +227,57 @@ function loadBookmarks() {
             if (bookmarksBar.children.length === 0) {
                 bookmarksBar.innerHTML = '<div class="bookmark-item">Không có bookmark nào</div>';
             }
+            
+            // Add click handlers for folders after adding all bookmarks
+            setupFolderHandlers();
         });
     } else {
-        // Enhanced mock bookmarks for demo with real favicons
+        // Enhanced mock bookmarks for demo with real favicons and folders
         const mockBookmarks = [
-            { title: 'Gmail', url: 'https://gmail.com', domain: 'gmail.com' },
-            { title: 'YouTube', url: 'https://youtube.com', domain: 'youtube.com' },
-            { title: 'GitHub', url: 'https://github.com', domain: 'github.com' },
-            { title: 'Stack Overflow', url: 'https://stackoverflow.com', domain: 'stackoverflow.com' },
-            { title: 'Reddit', url: 'https://reddit.com', domain: 'reddit.com' },
-            { title: 'Twitter', url: 'https://twitter.com', domain: 'twitter.com' },
-            { title: 'Facebook', url: 'https://facebook.com', domain: 'facebook.com' },
-            { title: 'LinkedIn', url: 'https://linkedin.com', domain: 'linkedin.com' }
+            { title: 'Gmail', url: 'https://gmail.com' },
+            { title: 'YouTube', url: 'https://youtube.com' },
+            { title: 'GitHub', url: 'https://github.com' },
+            { 
+                title: 'Social Media',
+                children: [
+                    { title: 'Facebook', url: 'https://facebook.com' },
+                    { title: 'Twitter', url: 'https://twitter.com' },
+                    { title: 'LinkedIn', url: 'https://linkedin.com' },
+                    { title: 'Instagram', url: 'https://instagram.com' }
+                ]
+            },
+            { title: 'Stack Overflow', url: 'https://stackoverflow.com' },
+            { title: 'Reddit', url: 'https://reddit.com' },
+            {
+                title: 'News Sites',
+                children: [
+                    { title: 'CNN', url: 'https://cnn.com' },
+                    { title: 'BBC', url: 'https://bbc.com' },
+                    { title: 'The New York Times', url: 'https://nytimes.com' },
+                    { 
+                        title: 'Tech News',
+                        children: [
+                            { title: 'TechCrunch', url: 'https://techcrunch.com' },
+                            { title: 'The Verge', url: 'https://theverge.com' },
+                            { title: 'Wired', url: 'https://wired.com' }
+                        ]
+                    }
+                ]
+            }
         ];
 
         const bookmarksBar = document.getElementById('bookmarksBar');
         bookmarksBar.innerHTML = '';
 
         mockBookmarks.forEach(bookmark => {
-            const bookmarkElement = document.createElement('a');
-            bookmarkElement.className = 'bookmark-item';
-            bookmarkElement.href = bookmark.url;
-
-            const favicon = document.createElement('img');
-            favicon.className = 'bookmark-icon';
-            applyFaviconWithFallbacks(favicon, bookmark.url);
-
-            bookmarkElement.appendChild(favicon);
-            bookmarkElement.appendChild(document.createTextNode(bookmark.title));
-
-            bookmarksBar.appendChild(bookmarkElement);
+            const bookmarkElement = createBookmarkElement(bookmark);
+            if (bookmarkElement) {
+                bookmarksBar.appendChild(bookmarkElement);
+            }
         });
+        
+        // Add click handlers for folders
+        setupFolderHandlers();
     }
 }
 
@@ -770,6 +777,101 @@ function saveBackgroundSettings(backgroundUrl) {
             action: "settingsUpdated",
             setting: "background"
         });
+    });
+}
+
+// Helper function to create a bookmark element based on node type (url or folder)
+function createBookmarkElement(node) {
+    if (node.url) {
+        // Create regular bookmark item
+        const bookmarkElement = document.createElement('a');
+        bookmarkElement.className = 'bookmark-item';
+        bookmarkElement.href = node.url;
+
+        // Create favicon with improved fallback
+        const favicon = document.createElement('img');
+        favicon.className = 'bookmark-icon';
+        applyFaviconWithFallbacks(favicon, node.url);
+
+        bookmarkElement.appendChild(favicon);
+
+        const bookmarkTitle = document.createElement('span');
+        bookmarkTitle.innerText = node.title || 'Untitled';
+
+        bookmarkElement.appendChild(bookmarkTitle);
+        return bookmarkElement;
+    } 
+    else if (node.children) {
+        // Create bookmark folder
+        const folderElement = document.createElement('div');
+        folderElement.className = 'bookmark-item bookmark-folder';
+        folderElement.setAttribute('data-folder-id', node.id);
+        
+        // Create folder icon
+        const folderIcon = document.createElement('img');
+        folderIcon.className = 'bookmark-icon';
+        folderIcon.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2MzYyNjIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iZmVhdGhlciBmZWF0aGVyLWZvbGRlciI+PHBhdGggZD0iTTIyIDE5YTIgMiAwIDAgMS0yIDJINGEyIDIgMCAwIDEtMi0yVjVhMiAyIDAgMCAxIDItMmg1bDIgM2g9Ij48L3BhdGg+PC9zdmc+';
+        
+        folderElement.appendChild(folderIcon);
+        
+        const folderTitle = document.createElement('span');
+        folderTitle.innerText = node.title || 'Folder';
+        folderElement.appendChild(folderTitle);
+        
+        // Create dropdown container for folder contents
+        const folderContent = document.createElement('div');
+        folderContent.className = 'bookmark-folder-content';
+        
+        // Add all children (bookmarks and subfolders) to this folder
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(childNode => {
+                const childElement = createBookmarkElement(childNode);
+                if (childElement) {
+                    folderContent.appendChild(childElement);
+                }
+            });
+        } else {
+            // Empty folder
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'bookmark-item';
+            emptyMessage.innerText = 'Folder trống';
+            folderContent.appendChild(emptyMessage);
+        }
+        
+        folderElement.appendChild(folderContent);
+        return folderElement;
+    }
+    
+    return null; // Return null for invalid nodes
+}
+
+// Setup event handlers for bookmark folders
+function setupFolderHandlers() {
+    // Add click handlers for all folders to show/hide their contents
+    document.querySelectorAll('.bookmark-folder').forEach(folder => {
+        folder.addEventListener('click', function(event) {
+            // Prevent click from propagating to parent folders
+            event.stopPropagation();
+            
+            // Toggle this folder's active state
+            this.classList.toggle('active');
+            
+            // Close other open folders
+            document.querySelectorAll('.bookmark-folder').forEach(otherFolder => {
+                if (otherFolder !== this && !otherFolder.contains(this)) {
+                    otherFolder.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // Close folders when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.bookmark-folder')) {
+            document.querySelectorAll('.bookmark-folder').forEach(folder => {
+                folder.classList.remove('active');
+            });
+        }
     });
 }
 
